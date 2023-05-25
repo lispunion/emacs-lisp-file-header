@@ -1,19 +1,20 @@
 ;;; sexp-file-header.el --- Parse the `file-header' form in Lisp languages -*- lexical-binding: t -*-
-;;
-;; Copyright 2020 Lassi Kortela
+
+;; Copyright 2020, 2023 Lassi Kortela
 ;; SPDX-License-Identifier: ISC
+
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lispunion/emacs-sexp-file-header
 ;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
 ;; Package-Version: 0.1.0
 ;; Keywords: languages lisp
-;;
+
 ;; This file is not part of GNU Emacs.
-;;
+
 ;;; Commentary:
-;;
+
 ;; Parse the `file-header' form in Lisp languages.
-;;
+
 ;;; Code:
 
 (defun sexp-file-header-parse ()
@@ -40,20 +41,26 @@ form is not found cannot be parsed, nil is returned."
 (defun sexp-file-header-buffer-p ()
   (not (null (sexp-file-header-parse))))
 
+(defun sexp-file-header-handle-language (body)
+  (dolist (lang (cdr (assoc 'language body)))
+    (cond ((equal lang 'clojure) (clojure-mode))
+          ((equal lang 'clojurescript) (clojurescript-mode))
+          ((equal lang 'common-lisp) (lisp-mode))
+          ((equal lang 'emacs-lisp) (emacs-lisp-mode))
+          ((equal lang 'newlisp) (newlisp-mode))
+          ((equal lang 'racket) (racket-mode))
+          ((equal lang 'scheme) (scheme-mode)))))
+
 (defun sexp-file-header-activate ()
   (let ((body (cdr (sexp-file-header-parse))))
-    (dolist (lang (cdr (assoc 'language body)))
-      (cond ((equal lang 'clojure) (clojure-mode))
-            ((equal lang 'clojurescript) (clojurescript-mode))
-            ((equal lang 'common-lisp) (lisp-mode))
-            ((equal lang 'emacs-lisp) (emacs-lisp-mode))
-            ((equal lang 'newlisp) (newlisp-mode))
-            ((equal lang 'racket) (racket-mode))
-            ((equal lang 'scheme) (scheme-mode))))))
+    (sexp-file-header-handle-language body)
+    (not (null body))))
 
 (setq magic-mode-alist
-      (cons (cons 'sexp-file-header-buffer-p 'sexp-file-header-activate)
-            (assoc-delete-all 'sexp-file-header-buffer-p magic-mode-alist)))
+      (cons (cons 'sexp-file-header-buffer-p
+                  'sexp-file-header-activate)
+            (assoc-delete-all 'sexp-file-header-buffer-p
+                              magic-mode-alist)))
 
 (provide 'sexp-file-header)
 
