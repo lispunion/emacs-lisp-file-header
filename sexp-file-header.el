@@ -5,7 +5,7 @@
 
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lispunion/emacs-sexp-file-header
-;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.3"))
 ;; Package-Version: 0.1.0
 ;; Keywords: languages lisp
 
@@ -56,11 +56,9 @@ form is not found cannot be parsed, nil is returned."
     (sexp-file-header--apply-language body)
     (not (null body))))
 
-(setq magic-mode-alist
-      (cons (cons 'sexp-file-header-buffer-p
-                  'sexp-file-header-apply)
-            (assoc-delete-all 'sexp-file-header-buffer-p
-                              magic-mode-alist)))
+(add-to-list 'magic-mode-alist
+             (cons 'sexp-file-header-buffer-p
+                   'sexp-file-header-apply))
 
 (provide 'sexp-file-header)
 
