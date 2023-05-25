@@ -41,7 +41,7 @@ form is not found cannot be parsed, nil is returned."
 (defun sexp-file-header-buffer-p ()
   (not (null (sexp-file-header-parse))))
 
-(defun sexp-file-header-handle-language (body)
+(defun sexp-file-header--apply-language (body)
   (dolist (lang (cdr (assoc 'language body)))
     (cond ((equal lang 'clojure) (clojure-mode))
           ((equal lang 'clojurescript) (clojurescript-mode))
@@ -51,14 +51,14 @@ form is not found cannot be parsed, nil is returned."
           ((equal lang 'racket) (racket-mode))
           ((equal lang 'scheme) (scheme-mode)))))
 
-(defun sexp-file-header-activate ()
+(defun sexp-file-header-apply ()
   (let ((body (cdr (sexp-file-header-parse))))
-    (sexp-file-header-handle-language body)
+    (sexp-file-header--apply-language body)
     (not (null body))))
 
 (setq magic-mode-alist
       (cons (cons 'sexp-file-header-buffer-p
-                  'sexp-file-header-activate)
+                  'sexp-file-header-apply)
             (assoc-delete-all 'sexp-file-header-buffer-p
                               magic-mode-alist)))
 
