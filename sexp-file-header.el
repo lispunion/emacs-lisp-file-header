@@ -44,16 +44,23 @@ form is not found cannot be parsed, nil is returned."
   "Return non-nil if the current buffer has a (file-header ...) form."
   (not (null (sexp-file-header-parse))))
 
+(defvar sexp-file-header--languages
+  '((clojure clojure-mode)
+    (clojurescript clojurescript-mode)
+    (common-lisp lisp-mode)
+    (emacs-lisp emacs-lisp-mode)
+    (newlisp newlisp-mode)
+    (racket racket-mode)
+    (scheme scheme-mode)))
+
 (defun sexp-file-header--apply-language (body)
   "Apply the `language' section of (file-header BODY ...)."
-  (dolist (lang (cdr (assoc 'language body)))
-    (cond ((equal lang 'clojure) (clojure-mode))
-          ((equal lang 'clojurescript) (clojurescript-mode))
-          ((equal lang 'common-lisp) (lisp-mode))
-          ((equal lang 'emacs-lisp) (emacs-lisp-mode))
-          ((equal lang 'newlisp) (newlisp-mode))
-          ((equal lang 'racket) (racket-mode))
-          ((equal lang 'scheme) (scheme-mode)))))
+  (dolist (language-name (cdr (assoc 'language body)))
+    (dolist (entry sexp-file-header--languages)
+      (when (equal language-name (elt entry 0))
+        (let ((function-name (elt entry 1)))
+          (when (fboundp function-name)
+            (funcall function-name)))))))
 
 (defun sexp-file-header--apply-indent (body)
   "Apply the `indent' section of (file-header BODY ...)."
