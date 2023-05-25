@@ -53,10 +53,14 @@ form is not found cannot be parsed, nil is returned."
           ((equal lang 'racket) (racket-mode))
           ((equal lang 'scheme) (scheme-mode)))))
 
+(defun sexp-file-header--apply (body)
+  "Apply (file-header BODY ...)."
+  (sexp-file-header--apply-language body))
+
 (defun sexp-file-header-apply ()
   "Apply `file-header' from current buffer."
   (let ((body (cdr (sexp-file-header-parse))))
-    (sexp-file-header--apply-language body)
+    (sexp-file-header--apply body)
     (not (null body))))
 
 (add-to-list 'magic-mode-alist
