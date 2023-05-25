@@ -39,9 +39,11 @@ form is not found cannot be parsed, nil is returned."
              form)))))
 
 (defun sexp-file-header-buffer-p ()
+  "Return non-nil if the current buffer has a (file-header ...) form."
   (not (null (sexp-file-header-parse))))
 
 (defun sexp-file-header--apply-language (body)
+  "Apply (language BODY ...) section of a `file-header' form."
   (dolist (lang (cdr (assoc 'language body)))
     (cond ((equal lang 'clojure) (clojure-mode))
           ((equal lang 'clojurescript) (clojurescript-mode))
@@ -52,6 +54,7 @@ form is not found cannot be parsed, nil is returned."
           ((equal lang 'scheme) (scheme-mode)))))
 
 (defun sexp-file-header-apply ()
+  "Apply `file-header' from current buffer."
   (let ((body (cdr (sexp-file-header-parse))))
     (sexp-file-header--apply-language body)
     (not (null body))))
