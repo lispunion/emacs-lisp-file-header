@@ -1,9 +1,9 @@
-;;; declare-file.el --- Parse the `declare-file' form in Lisp languages -*- lexical-binding: t -*-
+;;; sexp-file-header.el --- Parse the `file-header' form in Lisp languages -*- lexical-binding: t -*-
 ;;
 ;; Copyright 2020 Lassi Kortela
 ;; SPDX-License-Identifier: ISC
 ;; Author: Lassi Kortela <lassi@lassi.io>
-;; URL: https://github.com/lispunion/emacs-declare-file
+;; URL: https://github.com/lispunion/emacs-sexp-file-header
 ;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
 ;; Package-Version: 0.1.0
 ;; Keywords: languages lisp
@@ -12,16 +12,16 @@
 ;;
 ;;; Commentary:
 ;;
-;; Parse the `declare-file' form in Lisp languages.
+;; Parse the `file-header' form in Lisp languages.
 ;;
 ;;; Code:
 
-(defun declare-file-parse ()
-  "Parse the `declare-file' form in the current buffer.
+(defun sexp-file-header-parse ()
+  "Parse the `file-header' form in the current buffer.
 
 Reads the current buffer using a lenient form of S-expression
-syntax. If a (declare-file ...) form is found near the top,
-returns that form as an Emacs Lisp object. If a `declare-file'
+syntax. If a (file-header ...) form is found near the top,
+returns that form as an Emacs Lisp object. If a `file-header'
 form is not found cannot be parsed, nil is returned."
   (save-excursion
     (save-restriction
@@ -29,19 +29,19 @@ form is not found cannot be parsed, nil is returned."
       (goto-char (point-min))
       (let (form (eof (gensym "eof-")))
         (while (not (or (eq eof form)
-                        (and (consp form) (eql 'declare-file (car form)))))
+                        (and (consp form) (eql 'file-header (car form)))))
           (setq form (condition-case _ (read (current-buffer))
                        (end-of-file eof)
                        (invalid-read-syntax eof))))
         (and (consp form)
-             (eql 'declare-file (car form))
+             (eql 'file-header (car form))
              form)))))
 
-(defun declare-file-buffer-p ()
-  (not (null (declare-file-parse))))
+(defun sexp-file-header-buffer-p ()
+  (not (null (sexp-file-header-parse))))
 
-(defun declare-file-activate ()
-  (let ((body (cdr (declare-file-parse))))
+(defun sexp-file-header-activate ()
+  (let ((body (cdr (sexp-file-header-parse))))
     (dolist (lang (cdr (assoc 'language body)))
       (cond ((equal lang 'clojure) (clojure-mode))
             ((equal lang 'clojurescript) (clojurescript-mode))
@@ -52,9 +52,9 @@ form is not found cannot be parsed, nil is returned."
             ((equal lang 'scheme) (scheme-mode))))))
 
 (setq magic-mode-alist
-      (cons (cons 'declare-file-buffer-p 'declare-file-activate)
-            (assoc-delete-all 'declare-file-buffer-p magic-mode-alist)))
+      (cons (cons 'sexp-file-header-buffer-p 'sexp-file-header-activate)
+            (assoc-delete-all 'sexp-file-header-buffer-p magic-mode-alist)))
 
-(provide 'declare-file)
+(provide 'sexp-file-header)
 
-;;; declare-file.el ends here
+;;; sexp-file-header.el ends here
