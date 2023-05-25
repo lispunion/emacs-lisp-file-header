@@ -17,6 +17,8 @@
 
 ;;; Code:
 
+(require 'lisp-local)
+
 (defun sexp-file-header-parse ()
   "Parse the `file-header' form in the current buffer.
 
@@ -43,7 +45,7 @@ form is not found cannot be parsed, nil is returned."
   (not (null (sexp-file-header-parse))))
 
 (defun sexp-file-header--apply-language (body)
-  "Apply (language BODY ...) section of a `file-header' form."
+  "Apply the `language' section of (file-header BODY ...)."
   (dolist (lang (cdr (assoc 'language body)))
     (cond ((equal lang 'clojure) (clojure-mode))
           ((equal lang 'clojurescript) (clojurescript-mode))
@@ -53,9 +55,21 @@ form is not found cannot be parsed, nil is returned."
           ((equal lang 'racket) (racket-mode))
           ((equal lang 'scheme) (scheme-mode)))))
 
+(defun sexp-file-header--apply-indent (body)
+  "Apply the `indent' section of (file-header BODY ...)."
+  (let ((indent (cdr (assoc 'indent body))))
+    (dolist (indent-form indent)
+      (when (and (listp indent-form)
+                 (= 2 (length indent-form))
+                 (symbolp (car indent-form))
+                 (integerp (cadr indent-form))
+                 (>= (cadr indent-form) 0))
+        (lisp-local-set-indent (car indent-form) (cadr indent-form))))))
+
 (defun sexp-file-header--apply (body)
   "Apply (file-header BODY ...)."
-  (sexp-file-header--apply-language body))
+  (sexp-file-header--apply-language body)
+  (sexp-file-header--apply-indent body))
 
 (defun sexp-file-header-apply ()
   "Apply `file-header' from current buffer."
