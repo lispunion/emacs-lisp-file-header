@@ -19,6 +19,78 @@
 
 (require 'lisp-local)
 
+(defun lisp-file-header--read-atmosphere ()
+  (let ((done nil))
+    (while (not done)
+      (if (or (looking-at "[ \n\r\t]+")
+              (looking-at ";.*$"))
+          (goto-char (match-end 0))
+        (setq done t)))))
+
+(defun lisp-file-header--read-string ()
+  (let ((result ""))
+    (while (not (looking-at "\""))
+      (when (looking-at "$")
+        (signal 'invalid-read-syntax '("Multi-line string")))
+      (when (looking-at "[^\"\\\n\r]+")
+        (setq result (concat result (match-string-no-properties 0)))
+        (goto-char (match-end 0)))
+      (when (looking-at "\\\\\\(.\\)")
+        (setq result (concat result (match-string-no-properties 1)))
+        (goto-char (match-end 0))))
+    (goto-char (match-end 0))
+    result))
+
+(defun lisp-file-header--read-list ()
+  (let ((result '())
+        (done nil))
+    (while (not done)
+      (lisp-file-header--read-atmosphere)
+      (cond ((looking-at ")")
+             (goto-char (match-end 0))
+             (setq done t))
+            (t
+             (setq result (cons (lisp-file-header--read-datum)
+                                result)))))
+    (reverse result)))
+
+(defun lisp-file-header--read-datum ()
+  (cond ((looking-at "\"")
+         (goto-char (match-end 0))
+         (lisp-file-header--read-string))
+        ((looking-at "(")
+         (goto-char (match-end 0))
+         (lisp-file-header--read-list))
+        ((looking-at ")")
+         (signal 'invalid-read-syntax '(")")))
+        ((looking-at "[A-Za-z0-9*+-]+")
+         (let ((object (car (read-from-string
+                             (match-string-no-properties 0)))))
+           (goto-char (match-end 0))
+           object))
+        ((looking-at ".")
+         (signal 'invalid-read-syntax
+                 (list (match-string-no-properties 0))))
+        (t
+         (signal 'end-of-file '()))))
+
+(defun lisp-file-header--read ()
+  (let ((rounds 5)
+        (result nil))
+    (while (> rounds 0)
+      (lisp-file-header--read-atmosphere)
+      (let ((datum (condition-case _ (lisp-file-header--read-datum)
+                     ((invalid-read-syntax end-of-file)
+                      (setq rounds 0)
+                      nil))))
+        (cond ((and (consp datum)
+                    (eql 'file-header (car datum)))
+               (setq result datum)
+               (setq rounds 0))
+              (t
+               (setq rounds (1- rounds))))))
+    result))
+
 (defun lisp-file-header-read ()
   "Read the `file-header' form in the current buffer.
 
@@ -26,19 +98,14 @@ Reads the current buffer using a lenient form of S-expression
 syntax. If a (file-header ...) form is found near the top,
 returns that form as an Emacs Lisp object. If a `file-header'
 form is not found or cannot be read, nil is returned."
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char (point-min))
-      (let (form (eof (gensym "eof-")))
-        (while (not (or (eq eof form)
-                        (and (consp form) (eql 'file-header (car form)))))
-          (setq form (condition-case _ (read (current-buffer))
-                       (end-of-file eof)
-                       (invalid-read-syntax eof))))
-        (and (consp form)
-             (eql 'file-header (car form))
-             form)))))
+  (save-match-data
+    (save-excursion
+      (save-restriction
+        (widen)
+        (goto-char (point-min))
+        (when (search-forward "file-header" 5000 t)
+          (goto-char (point-min))
+          (lisp-file-header--read))))))
 
 (defun lisp-file-header-buffer-p ()
   "Return non-nil if the current buffer has a (file-header ...) form."
