@@ -1,6 +1,6 @@
-;;; lisp-file-header.el --- Parse the `file-header' form in Lisp languages -*- lexical-binding: t -*-
+;;; lisp-file-header.el --- Read the `file-header' form in Lisp languages -*- lexical-binding: t -*-
 
-;; Copyright 2020, 2023 Lassi Kortela
+;; Copyright 2020, 2023, 2024 Lassi Kortela
 ;; SPDX-License-Identifier: ISC
 
 ;; Author: Lassi Kortela <lassi@lassi.io>
@@ -13,19 +13,19 @@
 
 ;;; Commentary:
 
-;; Parse the `file-header' form in Lisp languages.
+;; Read the `file-header' form in Lisp languages.
 
 ;;; Code:
 
 (require 'lisp-local)
 
-(defun lisp-file-header-parse ()
-  "Parse the `file-header' form in the current buffer.
+(defun lisp-file-header-read ()
+  "Read the `file-header' form in the current buffer.
 
 Reads the current buffer using a lenient form of S-expression
 syntax. If a (file-header ...) form is found near the top,
 returns that form as an Emacs Lisp object. If a `file-header'
-form is not found cannot be parsed, nil is returned."
+form is not found or cannot be read, nil is returned."
   (save-excursion
     (save-restriction
       (widen)
@@ -42,7 +42,7 @@ form is not found cannot be parsed, nil is returned."
 
 (defun lisp-file-header-buffer-p ()
   "Return non-nil if the current buffer has a (file-header ...) form."
-  (not (null (lisp-file-header-parse))))
+  (not (null (lisp-file-header-read))))
 
 (defvar lisp-file-header--languages
   '((clojure clojure-mode)
@@ -80,7 +80,7 @@ form is not found cannot be parsed, nil is returned."
 
 (defun lisp-file-header-apply ()
   "Apply `file-header' from current buffer."
-  (let ((body (cdr (lisp-file-header-parse))))
+  (let ((body (cdr (lisp-file-header-read))))
     (lisp-file-header--apply body)
     (not (null body))))
 
