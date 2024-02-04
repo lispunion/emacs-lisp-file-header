@@ -171,6 +171,7 @@ form is not found or cannot be read, nil is returned."
 
 (defun lisp-file-header-apply ()
   "Apply `file-header' from current buffer."
+  (interactive)
   (let ((body (cdr (lisp-file-header-read))))
     (lisp-file-header--apply body)
     (not (null body))))
