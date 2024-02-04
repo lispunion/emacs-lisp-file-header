@@ -125,6 +125,7 @@ form is not found or cannot be read, nil is returned."
   '((clojure clojure-mode)
     (clojurescript clojurescript-mode)
     (common-lisp lisp-mode)
+    (elisp emacs-lisp-mode)
     (emacs-lisp emacs-lisp-mode)
     (newlisp newlisp-mode)
     (racket racket-mode)
