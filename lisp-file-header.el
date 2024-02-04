@@ -150,14 +150,19 @@ form is not found or cannot be read, nil is returned."
 
 (defun lisp-file-header--apply-indent (body)
   "Apply the `indent' section of (file-header BODY ...)."
-  (let ((indent (cdr (assoc 'indent body))))
+  (let ((indent (lisp-file-header--get body '(indent))))
     (dolist (indent-form indent)
-      (when (and (listp indent-form)
-                 (= 2 (length indent-form))
-                 (symbolp (car indent-form))
-                 (integerp (cadr indent-form))
-                 (>= (cadr indent-form) 0))
-        (lisp-local-set-indent (car indent-form) (cadr indent-form))))))
+      (unless (and (listp indent-form)
+                   (= 2 (length indent-form)))
+        (error "Bad indent: %S" indent-form))
+      (let ((sym (elt indent-form 0))
+            (ind (elt indent-form 1)))
+        (unless (symbolp sym)
+          (error "Bad indent: %S" indent-form))
+        (unless (and (integerp ind) (>= ind 0))
+          (error "Bad indent: %S" ind))
+        (lisp-local-set-indent (car indent-form)
+                               (cadr indent-form))))))
 
 (defun lisp-file-header--apply (body)
   "Apply (file-header BODY ...)."
