@@ -121,6 +121,9 @@ form is not found or cannot be read, nil is returned."
   (let ((body (cdr (lisp-file-header-read))))
     (lisp-file-header--get body path)))
 
+(defvar lisp-file-header-default-mode
+  'lisp-data-mode)
+
 (defvar lisp-file-header--languages
   '((clojure clojure-mode)
     (clojurescript clojurescript-mode)
@@ -133,12 +136,17 @@ form is not found or cannot be read, nil is returned."
 
 (defun lisp-file-header--apply-language (body)
   "Apply the `language' section of (file-header BODY ...)."
-  (dolist (language-name (cdr (assoc 'language body)))
-    (dolist (entry lisp-file-header--languages)
-      (when (equal language-name (elt entry 0))
-        (let ((function-name (elt entry 1)))
-          (when (fboundp function-name)
-            (funcall function-name)))))))
+  (let ((any-mode-found nil))
+    (dolist (language-name (lisp-file-header--get body '(language)))
+      (let ((mode nil))
+        (dolist (entry lisp-file-header--languages)
+          (when (and (not mode) (equal language-name (elt entry 0)))
+            (setq mode (elt entry 1))))
+        (when (fboundp mode)
+          (setq any-mode-found t)
+          (funcall mode))))
+    (unless any-mode-found
+      (funcall lisp-file-header-default-mode))))
 
 (defun lisp-file-header--apply-indent (body)
   "Apply the `indent' section of (file-header BODY ...)."
