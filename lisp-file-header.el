@@ -20,6 +20,7 @@
 (require 'lisp-local)
 
 (defun lisp-file-header--read-atmosphere ()
+  "Internal helper for `lisp-file-header-read'."
   (let ((done nil))
     (while (not done)
       (if (or (looking-at "[ \n\r\t]+")
@@ -28,6 +29,7 @@
         (setq done t)))))
 
 (defun lisp-file-header--read-string ()
+  "Internal helper for `lisp-file-header-read'."
   (let ((result ""))
     (while (not (looking-at "\""))
       (when (looking-at "$")
@@ -42,6 +44,7 @@
     result))
 
 (defun lisp-file-header--read-list ()
+  "Internal helper for `lisp-file-header-read'."
   (let ((result '())
         (done nil))
     (while (not done)
@@ -55,6 +58,7 @@
     (reverse result)))
 
 (defun lisp-file-header--read-datum ()
+  "Internal helper for `lisp-file-header-read'."
   (cond ((looking-at "\"")
          (goto-char (match-end 0))
          (lisp-file-header--read-string))
@@ -75,6 +79,7 @@
          (signal 'end-of-file '()))))
 
 (defun lisp-file-header--read ()
+  "Internal helper for `lisp-file-header-read'."
   (let ((rounds 5)
         (result nil))
     (while (> rounds 0)
@@ -112,12 +117,14 @@ form is not found or cannot be read, nil is returned."
   (not (null (lisp-file-header-read))))
 
 (defun lisp-file-header--get (body path)
+  "Internal helper to get subform PATH from (file-header BODY...)."
   (dolist (name path body)
     (when (and body (listp body))
       (let ((entry (assoc name body)))
         (setq body (and entry (cdr entry)))))))
 
 (defun lisp-file-header-get (path)
+  "Get subform PATH from (file-header ...) in the current buffer."
   (let ((body (cdr (lisp-file-header-read))))
     (lisp-file-header--get body path)))
 
