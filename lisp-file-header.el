@@ -111,6 +111,16 @@ form is not found or cannot be read, nil is returned."
   "Return non-nil if the current buffer has a (file-header ...) form."
   (not (null (lisp-file-header-read))))
 
+(defun lisp-file-header--get (body path)
+  (dolist (name path body)
+    (when (and body (listp body))
+      (let ((entry (assoc name body)))
+        (setq body (and entry (cdr entry)))))))
+
+(defun lisp-file-header-get (path)
+  (let ((body (cdr (lisp-file-header-read))))
+    (lisp-file-header--get body path)))
+
 (defvar lisp-file-header--languages
   '((clojure clojure-mode)
     (clojurescript clojurescript-mode)
